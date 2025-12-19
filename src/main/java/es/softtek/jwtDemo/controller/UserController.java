@@ -1,17 +1,17 @@
 package es.softtek.jwtDemo.controller;
 
-import java.nio.charset.StandardCharsets;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
+
 import java.util.Date;
 import java.util.List;
 import java.util.stream.Collectors;
 
 import es.softtek.jwtDemo.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.AuthorityUtils;
-import org.springframework.web.bind.annotation.PathVariable;
+
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -19,6 +19,7 @@ import org.springframework.web.bind.annotation.RestController;
 import es.softtek.jwtDemo.dto.User;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
+import org.springframework.web.server.ResponseStatusException;
 
 @RestController
 public class UserController {
@@ -38,28 +39,31 @@ public class UserController {
     @PostMapping("user")
 
     // public User login(  @PathVariable String username,@PathVariable String pwd)
-    public User login(@RequestParam("user") String username, @RequestParam("password") String pwd) {
-
-        User dbUser = userRepository.findByCredentials(username, pwd);
+    public ResponseEntity<?> login(@RequestParam("user") String username, @RequestParam("password") String pwd) {
 
 
 
+        try{
+            User dbUser = userRepository.findByCredentials(username, pwd);
 
-        if (dbUser != null ) {
+            if (dbUser != null ) {
 
-            System.out.println("bien: " + username);
-
-
-            String token = getJWTToken(username);
+                System.out.println("bien: " + username);
 
 
-            dbUser.setToken(token);
+                String token = getJWTToken(username);
 
-            return dbUser;
-        } else {
-            System.out.println("error");
-            return null;
+
+                dbUser.setToken(token);
+
+                return new ResponseEntity<>(dbUser, HttpStatus.OK);
+            } else {
+                return new ResponseEntity<>("Error de Contraseña", HttpStatus.NOT_ACCEPTABLE);
+            }
+        } catch (Exception e) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Error de búsqueda", e);
         }
+
 
     }
 
