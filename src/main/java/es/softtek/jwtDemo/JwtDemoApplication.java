@@ -29,19 +29,32 @@ public class JwtDemoApplication {
 	@Configuration
 	class WebSecurityConfig extends WebSecurityConfigurerAdapter {
 
-		@Override
+        private final String[] AUTH_WHITELIST = {
+                // -- Swagger UI v2
+                "/v2/api-docs",
+                "/swagger-resources",
+                "/swagger-resources/**",
+                "/configuration/ui",
+                "/configuration/security",
+                "/swagger-ui.html",
+                "/webjars/**",
+                // -- Swagger UI v3 (OpenAPI)
+                "/v3/api-docs/**",
+                "/swagger-ui/**",
+                "/doc/**"
+                // other public endpoints of your API may be appended to this array
+        };
+
+        @Override
 		protected void configure(HttpSecurity http) throws Exception {
 			http.csrf().disable()
 				.addFilterAfter(new JWTAuthorizationFilter(), UsernamePasswordAuthenticationFilter.class)
 				.authorizeRequests()
 				.antMatchers(HttpMethod.POST, "/user").permitAll()//antMatchers OBSOLETO
 					//.requestMatchers(HttpMethod.POST, "/user").permitAll()
+                    .antMatchers(AUTH_WHITELIST).permitAll()
 					.antMatchers("/categorias/**").permitAll()
-                    .antMatchers(
-                            "/doc/swagger-ui.html",
-                            "/v3/api-docs/**",
-                            "/swagger-ui/**"
-                    ).permitAll()
+
 				.anyRequest().authenticated();//cualquier solicitud debe ser autenticada, de lo contrario, mi aplicación Spring devolverá una respuesta 401.
 
 			/*
